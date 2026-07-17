@@ -1,1 +1,1 @@
-# SalamiBot
+# WezCatB
