@@ -53,7 +53,6 @@ class todo(db.Model):
     done: Mapped[bool] = mapped_column(default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
 
-
 #schedules - like school schedules and sum
 class schedule(db.Model):
     __tablename__ = "schedule"
@@ -83,6 +82,7 @@ class event_sch(db.Model):
 with app.app_context():
     db.create_all()
     
+
 
 @app.route("/", methods = ["GET"])
 def index():
@@ -193,5 +193,57 @@ def todos():
 
                 _todos.append(_todo)
         return jsonify(_todos), 200
-        
+
+@app.route("/todos/<int:id>", methods = ["GET", "PATCH", "DELETE"])    
+def todoid(id):
+    if 'user_id' in session:
+        _id = session.get('user_id')
+        _user = user.query.filter_by(user_id = _id).first()
+        print("Yesah")
+    else:
+        return jsonify({
+            "error":"No account found"
+        }), 404
+    
+    _todo = todo.query.filter_by(id = id).first()
+    if _todo is None:
+        return jsonify({
+            "error":"could not find todo"            
+        }), 404
+    
+    if request.method == "PATCH":
+        data = request.get_json()
+        if data.get("title") is not None:
+            _todo.title = data.get("title")
+        if data.get("desc") is not None:
+            _todo.desc = data.get("desc")
+        if data.get("done") is not None:
+            _todo.done = not _todo.done
+            
+        db.session.commit()
+        return jsonify({
+            "message":"succesfully edited todo"
+        }), 200
+
+    elif request.method == "DELETE":
+        try:
+            db.session.delete(_todo)
+            db.session.commit()
+            return jsonify({
+                "message":"succesfully deleted todo"
+            }), 200
+        except:
+            db.session.rollback()
+            return jsonify({
+                "error":"could not delete item"
+            }), 500
+    
+    else:
+        t = {
+            "title": _todo.title,
+            "desc": _todo.desc,
+            "time": _todo.recordedTime,
+            "done": _todo.done
+        }
+        return jsonify(t), 200
 
