@@ -89,6 +89,7 @@ def index():
     print("hey")
     return jsonify({'message':'Heeyy'}), 200
 
+#USER AUTHENTICATION
 @app.route("/logIn", methods = ['POST'])
 def logIn():
     if 'user_id' in session:
@@ -116,7 +117,6 @@ def logIn():
             "error": "Username or password incorrect",
         }), 401
     
-
 @app.route("/signUp", methods = ['GET','POST'])
 def signUp():
     if 'user_id' in session:
@@ -147,10 +147,51 @@ def signUp():
             "message": f"Signed up as {usrn}"
         }), 201
     
-
 @app.route("/logOut", methods = ["DELETE"])
 def logOut():
     session.pop('user_id', None)
     return jsonify({
         "message": "logged out"
     }), 200
+
+#TODOS SYSTEM
+@app.route("/todos", methods = ["GET", "POST"])
+def todos():
+    if 'user_id' in session:
+        _id = session.get('user_id')
+        _user = user.query.filter_by(user_id = _id).first()
+        print("Yesah")
+    else:
+        return jsonify({
+            "error":"No account found"
+        }), 403
+
+    if request.method == "POST":
+        data = request.get_json()
+        print(data)
+        _title = data["title"]
+        _desc = data.get("desc", ".")
+            
+        _todo = todo(title = _title, desc = _desc, user_id = _user.user_id)
+        print(_todo)
+        db.session.add(_todo)
+        db.session.commit()
+        return jsonify({
+            "message": f"created todo with title {_title}"
+        }), 201
+    else:
+        todos = db.session.scalars(db.select(todo)).all()
+        _todos = []
+        for t in todos:
+            if t.user_id == _id:
+                _todo = {
+                    "title": t.title,
+                    "desc": t.desc,
+                    "time": t.recordedTime,
+                    "done": t.done
+                }   
+
+                _todos.append(_todo)
+        return jsonify(_todos), 200
+        
+
