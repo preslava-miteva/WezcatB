@@ -16,3 +16,7 @@ local.properties
 venv
 .env
 .http
+*.venv
+*.http
+*.pyc
+__pycache__/
