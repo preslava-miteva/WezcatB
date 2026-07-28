@@ -2,8 +2,8 @@
 accs - done
 schedule - helnaahhhhhhhhhhhhh
 calendar -hell nahhhhhhhhhhhhhhhh
-clock
-alarms
+clock - done
+alarms 
 mail
 weather api
 tasks and stuff - done
@@ -87,8 +87,16 @@ class alarms(db.Model):
     __tablename__ = "alarms" 
     id: Mapped[int] = mapped_column(Integer,  primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(String(200), nullable=True)
-    time = db.Column(db.DateTime)
+    time = db.Column(db.Time, nullable = False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable = False)
+    days = db.Column(db.String(200), default = "")
+    repeat: Mapped[int] = mapped_column(Integer, default=0) 
+    '''
+        0 - no repeat
+        1 - repeat for the next day
+        2 - repeat for multiple days
+    '''
+
 
 
 with app.app_context():
@@ -279,12 +287,6 @@ def clock():
             "message": str(local_time)
         }), 200
 
-'''    print("Ha")
-    local_time = datetime.now()
-    return jsonify({
-        "message": str(local_time)
-    }), 200
-'''
 #SCHEDULE SYSTEM -lwk abandoning it
 '''
 @app.route("/schedules", methods = ["GET", "POST"])
@@ -567,4 +569,118 @@ def schedayev(sid, did, evid):
     
     '''
 
+@app.route("/alarms", methods = ["GET", "POST"])
+def alarm():
+    if 'user_id' in session:
+        _id = session.get('user_id')
+        _user = user.query.filter_by(user_id = _id).first()
+        print("Yesah")
+    else:
+        return jsonify({
+            "error":"No account found"
+        }), 403
 
+    if request.method == "POST":
+        data = request.get_json()
+
+        days = data.get("days", "")
+        if days == "":
+            _repeat = data.get("repeat", 0)
+        else:
+            _repeat = 2
+        time = data.get("time", None)
+        if time is None:
+            print("no")
+            return jsonify({"error":"time is required"}), 400
+        title = data.get("title", "")
+        _time = datetime.strptime(time, "%H:%M").time()
+
+        alarm = alarms(
+            title = title,
+            user_id = _id,
+            time = _time,
+            days = days,
+            repeat = _repeat
+        )
+
+        db.session.add(alarm)
+        db.session.commit()
+        return jsonify({
+            "message":"successfully created"
+        }), 201
+
+    __alarms = db.session.scalars(db.select(alarms)).all()
+    _alarms = []
+    for t in __alarms:
+        if t.user_id == _id:
+
+            _todo = {
+                "title": t.title,
+                "time": str(t.time),
+                "days": t.days
+            }   
+
+            _alarms.append(_todo)
+    return jsonify(_alarms), 200
+
+    
+    
+
+@app.route("/alarms/<int:id>", methods = ["GET", "PATCH", "DELETE"])
+def alarmed(id):
+    if 'user_id' in session:
+        _id = session.get('user_id')
+        _user = user.query.filter_by(user_id = _id).first()
+        print("Yesah")
+    else:
+        return jsonify({
+            "error":"No account found"
+        }), 403
+
+    a = alarms.query.filter_by(id = id).first()
+    if a is None:
+        return jsonify({
+            "error":"could not find todo"            
+        }), 404
+    
+    if request.method == "PATCH":
+        data = request.get_json()
+        if data.get("title") is not None:
+            a.title = data.get("title", a.title)
+        if data.get("time") is not None:
+            a.time = datetime.strptime(data.get("time"), "%H:%M").time()
+        if data.get("days") is not None:
+            a.days = data.get("days")
+        if data.get("repeat") is not None:
+            a.repeat = data.get("repeat")
+                    
+        db.session.commit()
+        return jsonify({
+            "message":"succesfully edited todo"
+        }), 200
+
+    elif request.method == "DELETE":
+        try:
+            db.session.delete(a)
+            db.session.commit()
+            return jsonify({
+                "message":"succesfully deleted todo"
+            }), 200
+        except:
+            db.session.rollback()
+            return jsonify({
+                "error":"could not delete item"
+            }), 500
+    
+    else:
+        t = {
+            "title": a.title,
+            "time": str(a.time),
+            "days": a.days,
+            "repeat": a.repeat
+        }
+        return jsonify(t), 200
+    
+
+
+    
