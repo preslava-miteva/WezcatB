@@ -1,9 +1,9 @@
 ###
-GET http://127.0.0.1:5000/alarms
+POST http://127.0.0.1:5000/llm
 content-type: application/json
 
 {
-    "days":"Monday, Tuesday, Wednesday"
+    "question":"Hi, how are you?"
     
 }
 

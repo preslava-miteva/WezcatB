@@ -1,10 +1,12 @@
 '''
+
+SOFTWARE WISE
 accs - done
 schedule - helnaahhhhhhhhhhhhh
 calendar -hell nahhhhhhhhhhhhhhhh
 clock - done
-alarms 
-mail
+alarms - done 
+mail 
 weather api
 tasks and stuff - done
 talking ai
@@ -20,6 +22,8 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from flask_cors import CORS
 import os, random, time
+
+from ai import res
 
 class Base(DeclarativeBase):
     pass
@@ -682,5 +686,20 @@ def alarmed(id):
         return jsonify(t), 200
     
 
+@app.route("/llm", methods = ["POST"])
+def llm():
+    if 'user_id' in session:
+        _id = session.get('user_id')
+        _user = user.query.filter_by(user_id = _id).first()
+        print("Yesah")
+    else:
+        return jsonify({
+            "error":"No account found"
+        }), 403
 
-    
+    data = request.get_json()
+    question = data.get("question", "")
+    answer = res(question)
+    return jsonify({
+        "message": str(answer)
+    }), 200
