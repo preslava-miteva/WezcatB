@@ -1,8 +1,10 @@
 ###
-GET http://127.0.0.1:5000/clock
+GET http://127.0.0.1:5000/alarms
 content-type: application/json
 
-
-
+{
+    "days":"Monday, Tuesday, Wednesday"
+    
+}
 
 
