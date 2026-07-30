@@ -20,3 +20,4 @@ venv
 *.http
 *.pyc
 __pycache__/
+credentials.json

@@ -9,7 +9,7 @@ alarms - done
 mail 
 weather api
 tasks and stuff - done
-talking ai
+talking ai - done
 faces
 '''
 
@@ -34,9 +34,15 @@ db = SQLAlchemy(model_class=Base)
 
 databaseURL = os.getenv('DATABASE_URL')
 secretKey = os.getenv('SECRET_KEY')
+wKey = os.getenv('WEATHER_API_KEY')
 
 app.config['SECRET_KEY'] = secretKey
 app.config['SQLALCHEMY_DATABASE_URI'] = databaseURL
+
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+CLIENT_SECRETS_FILE = "credentials.json"
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+
 
 db.init_app(app)
 CORS(app)
@@ -703,3 +709,12 @@ def llm():
     return jsonify({
         "message": str(answer)
     }), 200
+
+@app.route("/weather/today", methods = ["GET"])
+def weatherToday():
+    pass
+
+@app.route("/weather/week", methods = ["GET"])
+def weatherWeek():
+    pass
+
