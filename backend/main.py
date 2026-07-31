@@ -52,6 +52,7 @@ class user(db.Model):
     user_id: Mapped[int] = mapped_column(Integer,  primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(200), nullable = False)
     password: Mapped[str] = mapped_column(String(200), nullable = False)
+    email: Mapped[str] = mapped_column(String(200), nullable = False)
     alarms = db.relationship('alarms', backref = "user")
     todos = db.relationship('todo', backref = "user")
     timezone = db.Column(db.String(50), default='UTC', nullable=False)
@@ -131,10 +132,11 @@ def logIn():
         print(data)
         usrn = data['username']
         pasw = data['password']
+        email = data['email']
         _user = user.query.filter_by(username=usrn).first()
         if _user is None:
             print("not asdhisio")
-        if _user and check_password_hash(_user.password, pasw):
+        if _user and check_password_hash(_user.password, pasw) and email == _user.email:
             session['user_id'] = _user.user_id
             print(_user.user_id)
             return jsonify({
@@ -158,6 +160,7 @@ def signUp():
         print(data)
         usrn = data['username']
         pasw = data['password']
+        email = data['email']
         existing_user = user.query.filter_by(username=usrn).first()
         if existing_user:
             return jsonify({
@@ -166,7 +169,7 @@ def signUp():
             }), 400
         passw = generate_password_hash(pasw)
         timezone = data.get("timezone", "UTC")
-        register = user(username = usrn, password = passw, timezone = timezone)
+        register = user(username = usrn, password = passw, email = email, timezone = timezone)
 
         db.session.add(register)
         db.session.commit()
@@ -718,3 +721,5 @@ def weatherToday():
 def weatherWeek():
     pass
 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
